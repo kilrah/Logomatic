@@ -416,42 +416,39 @@ static void MODE2ISR(void)
       }
     }
   }
-  if(RX_in < BUF_SIZE)
-  {
-    if(asc == 'N') { RX_array1[RX_in] = '$'; }
-    else if(asc == 'Y'){ RX_array1[RX_in] = 13; }
-    RX_in++;
-
-    if(RX_in == BUF_SIZE) log_array1 = 1;
-  }
-  else if(RX_in >= BUF_SIZE)
-  {
-    
-    if(asc == 'N') RX_array2[RX_in - BUF_SIZE] = '$';
-    else if(asc == 'Y'){ RX_array2[RX_in - BUF_SIZE] = 13; }
-    RX_in++;
-    
-    if(RX_in == 2 * BUF_SIZE)
-    {
-      log_array2 = 1;
-      RX_in = 0;
+  
+  int rdy = 0;
+  int count = 0;
+  int addr;
+  char *array;
+  while(!rdy) {
+    if(RX_in < BUF_SIZE) {
+      addr = RX_in;
+      array = RX_array1;
     }
-  }
-  if(RX_in < BUF_SIZE)
-  {
-    if(asc == 'N') RX_array1[RX_in] = '$';
-    else if(asc == 'Y'){ RX_array1[RX_in] = 10; }
+    else {
+      addr = RX_in - BUF_SIZE;
+      array = RX_array2;
+    }
+      
+    if (asc == 'N') { 
+      array[addr] = '$'; 
+      if (count > 0)
+        rdy = 1;
+    }
+    else if (asc == 'Y') {
+      if (count == 1) {
+        array[addr] = 10;
+        rdy = 1;
+      }
+      else {
+        array[addr] = 13;
+      }    
+    }
+    
+    count++;
     RX_in++;
-
     if(RX_in == BUF_SIZE) log_array1 = 1;
-  }
-  else if(RX_in >= BUF_SIZE)
-  {
-    
-    if(asc == 'N') RX_array2[RX_in - BUF_SIZE] = '$';
-    else if(asc == 'Y'){ RX_array2[RX_in - BUF_SIZE] = 10; }
-    RX_in++;
-    
     if(RX_in == 2 * BUF_SIZE)
     {
       log_array2 = 1;
