@@ -104,6 +104,7 @@ int main (void)
   int i;
   char name[32];
   int count = 0;
+  char header[256];
   
   enableFIQ();
   
@@ -150,7 +151,10 @@ int main (void)
   }
   
   handle = root_open_new(name);
-    
+
+  strcpy(header, "$N$;My Data\r\n$C$;V1 [V,U1];V2 [V,U2];V3 [V,U3]\r\n$I$;100\r\n$");
+  
+  fat_write_file(handle, (unsigned char *) header, strlen(header));
 
   sd_raw_sync();  
     
@@ -323,12 +327,14 @@ static void UART0ISR_2(void)
 static inline int pushValue(char* q, int ind, int value)
 {
   char* p = q + ind;
+  char  buf[10];
 
   if(asc == 'Y') // ASCII
   {
     // itoa returns the number of bytes written excluding
     // trailing '\0', hence the "+ 1"
-    return itoa(value, p, 10) + ind + 1;
+    itoa(value, buf, 10);
+    return sprintf(p, "%s;",buf) + ind;
   }
   else if(asc == 'N') // binary
   {
@@ -437,13 +443,18 @@ static void MODE2ISR(void)
         rdy = 1;
     }
     else if (asc == 'Y') {
-      if (count == 1) {
-        array[addr] = 10;
-        rdy = 1;
+      switch (count) {
+        case 0:
+          array[addr] = 13;
+          break;
+        case 1:
+          array[addr] = 10;
+          break;
+        case 2:
+          array[addr] = '$';
+          rdy = 1;
+          break;
       }
-      else {
-        array[addr] = 13;
-      }    
     }
     
     count++;

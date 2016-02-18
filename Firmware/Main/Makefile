@@ -391,7 +391,7 @@ endif
 FW.SFE: main.elf
 	@echo
 	@echo $(MSG_FLASH) $@
-	$(OBJCOPY) -O binary $< $@
+	$(OBJCOPY) -O binary $< ../$@
 
 
 # Create extended listing file from ELF output file.
